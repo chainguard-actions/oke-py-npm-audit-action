@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
+| v3.0.0 | [`v3.0.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v3.0.0) | [`6ec7878`](https://github.com/oke-py/npm-audit-action/commit/6ec7878c81d7dfe2b3295a63e1a608e9c952f46a) |
 | v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v4.0.1) | [`f02a3cf`](https://github.com/oke-py/npm-audit-action/commit/f02a3cf15e7a1860efac849dd45126f9c2cafe4f) |
 | v4.0.2 | [`v4.0.2`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v4.0.2) | [`828ccb3`](https://github.com/oke-py/npm-audit-action/commit/828ccb3b0710dfb351b6e9aaadec963c6953cacf) |
 
