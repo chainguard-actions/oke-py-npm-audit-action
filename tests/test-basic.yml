@@ -1,0 +1,44 @@
+name: Test basic npm audit
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create package.json with no vulnerabilities
+        run: |
+          mkdir -p /tmp/test-project
+          cat > /tmp/test-project/package.json << 'EOF'
+          {
+            "name": "test-project",
+            "version": "1.0.0",
+            "description": "Test project for npm audit",
+            "dependencies": {}
+          }
+          EOF
+          cd /tmp/test-project
+          npm install --package-lock-only
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          working_directory: /tmp/test-project
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          audit_level: low
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Assert npm_audit output exists
+        env:
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"

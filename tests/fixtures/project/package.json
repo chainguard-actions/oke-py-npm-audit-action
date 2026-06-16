@@ -1,0 +1,6 @@
+{
+  "name": "test-fixture-project",
+  "version": "1.0.0",
+  "description": "Fixture project for npm audit action tests",
+  "dependencies": {}
+}
