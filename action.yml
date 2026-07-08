@@ -1,0 +1,64 @@
+name: 'npm audit action'
+description: 'run npm audit'
+author: 'Naoki Oketani <okepy.naoki@gmail.com>'
+inputs:
+  audit_level:
+    description: 'The value of `--audit-level` flag'
+    default: low
+    required: false
+  create_issues:
+    description: 'Flag to create issues when vulnerabilities are found'
+    default: 'true'
+    required: false
+  create_pr_comments:
+    description: 'Flag to create pr comments when vulnerabilities are found'
+    default: 'true'
+    required: false
+  fail_on_vulnerabilities:
+    description: 'Fail the action when vulnerabilities are found'
+    default: 'true'
+    required: false
+  dedupe_issues:
+    description: 'Flag to de-dupe against open issues'
+    default: 'false'
+    required: false
+  github_token:
+    description: 'GitHub Access Token.'
+    required: true
+  issue_assignees:
+    description: 'Issue assignees (separated by commma)'
+    required: false
+  issue_labels:
+    description: 'Issue labels (separated by commma)'
+    required: false
+  issue_title:
+    description: 'Issue title'
+    default: 'npm audit found vulnerabilities'
+    required: false
+  issue_type:
+    description: 'Issue type (e.g. Bug, Task). Requires issue types to be enabled on the organization'
+    required: false
+  json_flag:
+    description: 'Run `npm audit` with `--json`'
+    default: 'false'
+    required: false
+  production_flag:
+    description: 'Run `npm audit` with `--omit=dev`'
+    default: 'false'
+    required: false
+  registry:
+    description: 'The registry URL passed to `npm audit` via the `--registry` flag (e.g. https://registry.npmjs.org)'
+    required: false
+  working_directory:
+    description: 'The directory which contains package.json'
+    required: false
+outputs:
+  npm_audit:
+    description: 'The output of the npm audit report in a text format'
+runs:
+  pre: chainguard-phonehome.js
+  using: 'node24'
+  main: 'dist/index.js'
+branding:
+  icon: 'search'
+  color: 'orange'

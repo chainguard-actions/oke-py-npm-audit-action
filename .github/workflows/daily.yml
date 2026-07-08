@@ -1,0 +1,55 @@
+name: daily scan
+
+on:
+  schedule:
+    - cron: '0 20 * * *'
+
+permissions: {}
+
+jobs:
+  scan:
+    name: npm audit
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      # Intentionally unpinned: dogfoods the latest released major tag of
+      # this repository's own action.
+      - uses: oke-py/npm-audit-action@41a983db466d27a887bb5e6830abc0bb925cf9e3 # v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability
+          dedupe_issues: true
+          production_flag: true
+
+  scan-on-windows:
+    name: npm audit (windows)
+    permissions:
+      contents: read
+      issues: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      # Intentionally unpinned: dogfoods the latest released major tag of
+      # this repository's own action.
+      - uses: oke-py/npm-audit-action@41a983db466d27a887bb5e6830abc0bb925cf9e3 # v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability
+          dedupe_issues: true
+          production_flag: true

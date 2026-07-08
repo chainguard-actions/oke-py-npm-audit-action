@@ -1,0 +1,55 @@
+name: Test audit_level input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify npm is available
+        run: |
+          node --version
+          npm --version
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          working_directory: tests/fixtures/clean-project
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+          audit_level: critical
+
+      - name: Assert npm_audit output is set with audit_level=critical
+        env:
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty with audit_level=critical"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set with audit_level=critical"
+
+      - id: action-high
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          working_directory: tests/fixtures/clean-project
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+          audit_level: high
+
+      - name: Assert npm_audit output is set for audit_level=high
+        env:
+          ACTUAL: ${{ steps.action-high.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty with audit_level=high"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set with audit_level=high"

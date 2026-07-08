@@ -1,0 +1,47 @@
+name: Test basic usage - no vulnerabilities
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install npm
+        run: |
+          node --version
+          npm --version
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          working_directory: tests/fixtures/clean-project
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+          audit_level: low
+
+      - name: Assert npm_audit output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set"
+
+      - name: Assert npm_audit output contains audit info
+        env:
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          # npm audit output should mention "found" or "vulnerabilities" or "audited"
+          if echo "$ACTUAL" | grep -qi "found\|vulnerabilit\|audited\|packages\|audit"; then
+            echo "PASS: npm_audit output contains expected audit info"
+          else
+            echo "FAIL: npm_audit output does not contain expected audit info"
+            exit 1
+          fi

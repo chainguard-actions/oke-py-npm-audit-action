@@ -1,0 +1,38 @@
+name: 'git tag major version'
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  tag-major-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out repository code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # The push below authenticates via the tokenized remote URL.
+          persist-credentials: false
+      - name: git config
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+      - name: git tag
+        run: |
+          git remote set-url origin https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
+          # Extract major version from release tag (e.g., v4.0.0 -> v4)
+          MAJOR_VERSION=$(echo "${RELEASE_TAG}" | grep -o "^v[0-9]*")
+          echo "Tagging with major version: ${MAJOR_VERSION}"
+
+          # Delete the major version tag if it exists
+          git push origin -d "${MAJOR_VERSION}" || true
+
+          # Create and push the new major version tag
+          git tag "${MAJOR_VERSION}" "${GITHUB_SHA}"
+          git push origin "${MAJOR_VERSION}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}

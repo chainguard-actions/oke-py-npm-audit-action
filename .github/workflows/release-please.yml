@@ -1,0 +1,31 @@
+# Automates releases with release-please. Conventional Commit messages
+# merged to `main` accumulate into a release PR that bumps package.json,
+# package-lock.json, and CHANGELOG.md. Merging the release PR creates the
+# version tag and the GitHub Release.
+#
+# Authentication uses the RELEASE_PLEASE_TOKEN fine-grained PAT (Contents
+# and Pull requests read/write) instead of GITHUB_TOKEN, so that CI runs
+# on the release PR and the published release triggers the
+# `git tag major version` workflow, which moves the floating major tag
+# (e.g. `v4`). If this workflow fails with an authentication error, the
+# PAT has likely expired and needs to be reissued.
+
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}

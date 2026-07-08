@@ -1,0 +1,242 @@
+import * as child_process from 'node:child_process'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { Audit } from '../src/audit'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+vi.mock('node:child_process')
+
+const audit = new Audit()
+
+describe('run', () => {
+  beforeEach(() => {
+    vi.mocked(child_process).spawnSync.mockClear()
+  })
+
+  test('finds vulnerabilities with default values', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        const stdout = fs
+          .readFileSync(path.join(__dirname, 'testdata/audit/error.txt'))
+          .toString()
+
+        return {
+          pid: 100,
+          output: [null, stdout, ''],
+          stdout,
+          stderr: '',
+          status: 1,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    audit.run('low', 'false', 'false')
+    expect(audit.foundVulnerability()).toBeTruthy()
+  })
+
+  test('finds vulnerabilities with production flag enabled', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        const stdout = fs
+          .readFileSync(path.join(__dirname, 'testdata/audit/error.txt'))
+          .toString()
+
+        return {
+          pid: 100,
+          output: [null, stdout, ''],
+          stdout,
+          stderr: '',
+          status: 1,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    audit.run('low', 'true', 'false')
+    expect(audit.foundVulnerability()).toBeTruthy()
+  })
+
+  test('finds vulnerabilities with json flag enabled', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        const stdout = fs
+          .readFileSync(path.join(__dirname, 'testdata/audit/error.json'))
+          .toString()
+
+        return {
+          pid: 100,
+          output: [null, stdout, ''],
+          stdout,
+          stderr: '',
+          status: 1,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    audit.run('low', 'false', 'true')
+    expect(audit.foundVulnerability()).toBeTruthy()
+  })
+
+  test('passes --registry to npm audit when registry is provided', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        return {
+          pid: 100,
+          output: [null, 'found 0 vulnerabilities', ''],
+          stdout: 'found 0 vulnerabilities',
+          stderr: '',
+          status: 0,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    audit.run('low', false, false, 'https://registry.npmjs.org')
+    expect(child_process.spawnSync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.arrayContaining(['--registry=https://registry.npmjs.org']),
+      expect.any(Object)
+    )
+  })
+
+  test('does not pass --registry when registry is not provided', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        return {
+          pid: 100,
+          output: [null, 'found 0 vulnerabilities', ''],
+          stdout: 'found 0 vulnerabilities',
+          stderr: '',
+          status: 0,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    audit.run('low', false, false)
+    const args = vi.mocked(child_process).spawnSync.mock.calls[0][1] as string[]
+    expect(args.some((a) => a.startsWith('--registry'))).toBe(false)
+  })
+
+  test('does not find vulnerabilities', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        const stdout = fs
+          .readFileSync(path.join(__dirname, 'testdata/audit/success.txt'))
+          .toString()
+
+        return {
+          pid: 100,
+          output: [null, stdout, ''],
+          stdout,
+          stderr: '',
+          status: 0,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    audit.run('low', 'false', 'false')
+    expect(audit.foundVulnerability()).toBeFalsy()
+  })
+
+  test('throws an error if error is not null', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        return {
+          pid: 100,
+          output: [null, '', ''],
+          stdout: '',
+          stderr: '',
+          status: 0,
+          signal: null,
+          error: new Error('Something is wrong')
+        }
+      }
+    )
+
+    expect.assertions(1)
+    const e = new Error('Something is wrong')
+    expect(() => audit.run('low', 'false', 'false')).toThrowError(e)
+  })
+
+  test('throws an error if status is null', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        return {
+          pid: 100,
+          output: [null, '', ''],
+          stdout: '',
+          stderr: '',
+          status: null,
+          signal: 'SIGTERM',
+          error: undefined
+        }
+      }
+    )
+
+    expect.assertions(1)
+    const e = new Error('the subprocess terminated due to a signal.')
+    expect(() => audit.run('low', 'false', 'false')).toThrowError(e)
+  })
+
+  test('throws an error if stderr is null', () => {
+    vi.mocked(child_process).spawnSync.mockImplementation(
+      (): child_process.SpawnSyncReturns<string> => {
+        return {
+          pid: 100,
+          output: [null, '', 'Something is wrong'],
+          stdout: '',
+          stderr: 'Something is wrong',
+          status: 1,
+          signal: null,
+          error: undefined
+        }
+      }
+    )
+
+    expect.assertions(1)
+    const e = new Error('Something is wrong')
+    expect(() => audit.run('low', 'false', 'false')).toThrowError(e)
+  })
+})
+
+describe('strippedStdout', () => {
+  test('wraps the output in a code block', () => {
+    const a = new Audit()
+    a.stdout = 'found 1 vulnerability'
+    expect(a.strippedStdout()).toBe('```\nfound 1 vulnerability\n```')
+  })
+
+  test('truncates output exceeding the GitHub body length limit', () => {
+    const a = new Audit()
+    a.stdout = 'a'.repeat(100000)
+    const body = a.strippedStdout()
+    expect(body.length).toBe(65536)
+    expect(body).toContain('... (truncated)\n```')
+    expect(body).toContain(
+      'truncated because it exceeds the maximum body length'
+    )
+  })
+
+  test('does not truncate output at exactly the limit', () => {
+    const a = new Audit()
+    // '```\n' + stdout + '\n```' is exactly 65536 characters
+    a.stdout = 'a'.repeat(65536 - 8)
+    const body = a.strippedStdout()
+    expect(body.length).toBe(65536)
+    expect(body).not.toContain('truncated')
+  })
+})
