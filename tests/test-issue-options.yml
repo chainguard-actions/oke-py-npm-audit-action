@@ -1,0 +1,34 @@
+name: Test issue options - assignees, labels, type, and registry inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: audit
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          fail_on_vulnerabilities: 'false'
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          working_directory: tests/fixtures/clean-project
+          issue_assignees: 'octocat'
+          issue_labels: 'security,bug'
+          issue_type: 'Bug'
+          registry: 'https://registry.npmjs.org'
+        env:
+          GITHUB_EVENT_NAME: push
+
+      - name: Assert npm_audit output is set
+        env:
+          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set"

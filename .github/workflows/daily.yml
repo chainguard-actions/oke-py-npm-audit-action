@@ -1,0 +1,51 @@
+name: daily scan
+
+on:
+  schedule:
+    - cron: '0 20 * * *'
+
+permissions: {}
+
+jobs:
+  scan:
+    name: npm audit
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      matrix:
+        os: [ubuntu-slim, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      - uses: oke-py/npm-audit-action@96715dda926adae1af5001117edfd47b2a68ed02 # v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability
+          dedupe_issues: true
+          production_flag: true
+
+  scan-on-windows:
+    name: npm audit (windows)
+    permissions:
+      contents: read
+      issues: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      - uses: oke-py/npm-audit-action@96715dda926adae1af5001117edfd47b2a68ed02 # v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability
+          dedupe_issues: true
+          production_flag: true

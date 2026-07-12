@@ -1,0 +1,36 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a subdirectory project
+        run: |
+          mkdir -p tests/fixtures/subdir-project
+          cp tests/fixtures/clean-project/package.json tests/fixtures/subdir-project/
+          cp tests/fixtures/clean-project/package-lock.json tests/fixtures/subdir-project/
+
+      - id: audit
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          fail_on_vulnerabilities: 'false'
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          working_directory: tests/fixtures/subdir-project
+        env:
+          GITHUB_EVENT_NAME: push
+
+      - name: Assert npm_audit output is set when using working_directory
+        env:
+          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty when using working_directory"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set with working_directory"
