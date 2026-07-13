@@ -1,0 +1,7 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "description": "A minimal test project with no dependencies",
+  "private": true,
+  "dependencies": {}
+}

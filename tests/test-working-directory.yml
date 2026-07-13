@@ -1,0 +1,44 @@
+name: Test working_directory input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: push
+      GITHUB_REF: refs/heads/main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up event payload
+        run: |
+          mkdir -p /tmp/events
+          cp "$GITHUB_WORKSPACE/tests/fixtures/events/push.json" /tmp/events/push.json
+          echo "GITHUB_EVENT_PATH=/tmp/events/push.json" >> "$GITHUB_ENV"
+
+      - name: Set up npm project in subdirectory
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/myapp"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package.json" "$GITHUB_WORKSPACE/myapp/package.json"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package-lock.json" "$GITHUB_WORKSPACE/myapp/package-lock.json"
+
+      - id: audit
+        uses: .
+        with:
+          github_token: fake-token-for-testing
+          audit_level: low
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'true'
+          working_directory: myapp
+
+      - name: Assert npm_audit output is set
+        env:
+          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty when using working_directory"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set when using working_directory"

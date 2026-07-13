@@ -1,19 +1,98 @@
-# oke-py/npm-audit-action
+# npm audit action
 
-run npm audit
+[![Coverage Status](https://coveralls.io/repos/github/oke-py/npm-audit-action/badge.svg?branch=main)](https://coveralls.io/github/oke-py/npm-audit-action?branch=main)
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/oke-py/npm-audit-action](https://github.com/oke-py/npm-audit-action).
+GitHub Action that runs `npm audit` and reports vulnerabilities.
 
-## Versions
+## Features
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v3.0.0 | [`v3.0.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v3.0.0) | [`6ec7878`](https://github.com/oke-py/npm-audit-action/commit/6ec7878c81d7dfe2b3295a63e1a608e9c952f46a) |
-| v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v4.0.1) | [`f02a3cf`](https://github.com/oke-py/npm-audit-action/commit/f02a3cf15e7a1860efac849dd45126f9c2cafe4f) |
-| v4.0.2 | [`v4.0.2`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v4.0.2) | [`828ccb3`](https://github.com/oke-py/npm-audit-action/commit/828ccb3b0710dfb351b6e9aaadec963c6953cacf) |
-| v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.0.0) | [`ce19adc`](https://github.com/oke-py/npm-audit-action/commit/ce19adc837f476af3925bacc5c14372ab786746f) |
-| v5.1.0 | [`v5.1.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.1.0) | [`41a983d`](https://github.com/oke-py/npm-audit-action/commit/41a983db466d27a887bb5e6830abc0bb925cf9e3) |
-| v5.3.0 | [`v5.3.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.3.0) | [`96715dd`](https://github.com/oke-py/npm-audit-action/commit/96715dda926adae1af5001117edfd47b2a68ed02) |
+- Post a pull request comment when vulnerabilities are found
+- Create a GitHub issue on pushes or scheduled runs when vulnerabilities are found
+
+![Issue example](https://github.com/oke-py/npm-audit-action/blob/main/issue.png)
+
+## Usage
+
+### Permissions
+
+When creating comments or issues, grant write permissions:
+
+```yaml
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+```
+
+### Inputs
+
+| Parameter | Required | Default | Description |
+| :-- | :--: | :--: | :-- |
+| `audit_level` | false | `low` | Value for `npm audit --audit-level` |
+| `create_issues` | false | `true` | Create issues when vulnerabilities are found |
+| `create_pr_comments` | false | `true` | Create pull request comments when vulnerabilities are found |
+| `dedupe_comments` | false | `false` | Skip commenting on the existing issue when the report is unchanged from the last one posted by this action. Effective only with `dedupe_issues: true` |
+| `dedupe_issues` | false | `false` | De-dupe against open issues |
+| `fail_on_vulnerabilities` | false | `true` | Fail the action when vulnerabilities are found |
+| `github_token` | true | N/A | GitHub Access Token. Use `${{ secrets.GITHUB_TOKEN }}` |
+| `issue_assignees` | false | N/A | Issue assignees (comma-separated) |
+| `issue_labels` | false | N/A | Issue labels (comma-separated) |
+| `issue_title` | false | `npm audit found vulnerabilities` | Issue title |
+| `issue_type` | false | N/A | Issue type (e.g. `Bug`, `Task`). Requires [issue types](https://docs.github.com/en/issues/tracking-your-work-with-issues/configuring-issues/managing-issue-types-in-an-organization) to be enabled on the organization |
+| `json_flag` | false | `false` | Run `npm audit` with `--json` |
+| `production_flag` | false | `false` | Run `npm audit` with `--omit=dev` |
+| `registry` | false | N/A | Registry URL passed to `npm audit` via the `--registry` flag (e.g. `https://registry.npmjs.org`) |
+| `resolve_pr_comments` | false | `false` | Edit previous report comments on the pull request (collapse the report and note the resolution) when vulnerabilities are no longer found. Effective only with `create_pr_comments: true` |
+| `working_directory` | false | N/A | Directory containing `package.json` |
+
+### Outputs
+
+| Parameter | Description |
+| :-- | :-- |
+| `npm_audit` | The `npm audit` report output as text |
+
+### Example Workflow
+
+```yaml
+name: npm audit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'releases/*'
+# on:
+#   schedule:
+#     - cron: '0 10 * * *'
+
+jobs:
+  scan:
+    name: npm audit
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      - uses: oke-py/npm-audit-action@v5
+        with:
+          audit_level: moderate
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability,test
+          dedupe_issues: true
+          dedupe_comments: true
+```
+
+---
+
+This action is inspired by [homoluctus/gitrivy](https://github.com/homoluctus/gitrivy).
 
 ## Privacy
 

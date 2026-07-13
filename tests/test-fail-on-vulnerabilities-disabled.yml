@@ -1,0 +1,42 @@
+name: Test fail_on_vulnerabilities disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: push
+      GITHUB_REF: refs/heads/main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up event payload
+        run: |
+          mkdir -p /tmp/events
+          cp "$GITHUB_WORKSPACE/tests/fixtures/events/push.json" /tmp/events/push.json
+          echo "GITHUB_EVENT_PATH=/tmp/events/push.json" >> "$GITHUB_ENV"
+
+      - name: Copy clean npm project to workspace
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package.json" "$GITHUB_WORKSPACE/package.json"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package-lock.json" "$GITHUB_WORKSPACE/package-lock.json"
+
+      - id: audit
+        uses: .
+        with:
+          github_token: fake-token-for-testing
+          audit_level: low
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+
+      - name: Assert action completed and npm_audit output is set
+        env:
+          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty even with fail_on_vulnerabilities=false"
+            exit 1
+          fi
+          echo "PASS: action completed successfully with fail_on_vulnerabilities=false"
