@@ -1,0 +1,46 @@
+name: Test issue assignees and labels inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up a minimal package.json with no vulnerabilities
+        run: |
+          mkdir -p /tmp/test-pkg
+          cat > /tmp/test-pkg/package.json <<'EOF'
+          {
+            "name": "test-package",
+            "version": "1.0.0",
+            "description": "Test package",
+            "dependencies": {}
+          }
+          EOF
+          cd /tmp/test-pkg
+          npm install --package-lock-only 2>/dev/null || true
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          audit_level: critical
+          fail_on_vulnerabilities: 'false'
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          issue_assignees: 'octocat,monalisa'
+          issue_labels: 'security,vulnerability'
+          issue_title: 'Test vulnerability report'
+          working_directory: '/tmp/test-pkg'
+
+      - name: Assert npm_audit output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"

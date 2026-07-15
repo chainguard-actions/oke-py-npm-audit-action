@@ -1,0 +1,6 @@
+{
+  "name": "subapp",
+  "version": "1.0.0",
+  "description": "A subapp project with no vulnerabilities",
+  "dependencies": {}
+}
