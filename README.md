@@ -12,6 +12,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v4.0.1 | [`v4.0.1`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v4.0.1) | [`f02a3cf`](https://github.com/oke-py/npm-audit-action/commit/f02a3cf15e7a1860efac849dd45126f9c2cafe4f) |
 | v4.0.2 | [`v4.0.2`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v4.0.2) | [`828ccb3`](https://github.com/oke-py/npm-audit-action/commit/828ccb3b0710dfb351b6e9aaadec963c6953cacf) |
 | v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.0.0) | [`ce19adc`](https://github.com/oke-py/npm-audit-action/commit/ce19adc837f476af3925bacc5c14372ab786746f) |
+| v5.0.1 | [`v5.0.1`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.0.1) | [`9401043`](https://github.com/oke-py/npm-audit-action/commit/9401043799369ac417d1485c108bf5d327982b73) |
 | v5.1.0 | [`v5.1.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.1.0) | [`41a983d`](https://github.com/oke-py/npm-audit-action/commit/41a983db466d27a887bb5e6830abc0bb925cf9e3) |
 | v5.2.0 | [`v5.2.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.2.0) | [`25befe5`](https://github.com/oke-py/npm-audit-action/commit/25befe592ecf37f97ab9f448ed274c2ce9017c66) |
 | v5.3.0 | [`v5.3.0`](https://github.com/chainguard-actions/oke-py-npm-audit-action/tree/v5.3.0) | [`96715dd`](https://github.com/oke-py/npm-audit-action/commit/96715dda926adae1af5001117edfd47b2a68ed02) |
