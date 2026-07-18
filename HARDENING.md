@@ -8,7 +8,7 @@
 
 **Test Policy SHA:** `843adf9e4b8f85d0c08b27b9d0b09dd094b54702`
 
-**Harden Agent Version:** `1`
+**Harden Agent Version:** `2`
 
 Action **oke-py--npm-audit-action/v5.1.0** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
@@ -16,22 +16,22 @@ Action **oke-py--npm-audit-action/v5.1.0** was hardened automatically. 2 finding
 
 ### unpinned-uses (severity: high)
 
-The workflow uses oke-py/npm-audit-action@v5 (a mutable version tag, not a full 40-character SHA commit hash) in two jobs. This means the action could be silently replaced with a malicious version without any change to the workflow file. Both occurrences are in daily.yml.
+daily.yml references `oke-py/npm-audit-action@v5` — a mutable version tag rather than a pinned 40-character commit SHA. If the tag is moved (intentionally or by a supply-chain attacker), a different, potentially malicious version of the action will run. This appears twice in the file (once in the `scan` job and once in the `scan-on-windows` job). The comment `# zizmor: ignore[unpinned-uses]` suppresses the existing zizmor check but does not mitigate the actual risk.
 
 Locations:
 
-- `.github/workflows/daily.yml:27`
-- `.github/workflows/daily.yml:43`
+- `.github/workflows/daily.yml:22`
+- `.github/workflows/daily.yml:40`
 
 ### script-injection (severity: high)
 
-Rule (b) violation in git-tag.yml: The env var MAJOR_VERSION (derived from RELEASE_TAG, which is set from github.event.release.tag_name — a workflow-controllable value) is expanded unquoted in multiple shell commands: `git push origin -d ${MAJOR_VERSION} || true`, `git tag ${MAJOR_VERSION} ${GITHUB_SHA}`, and `git push origin ${MAJOR_VERSION}`. An attacker who can publish a release with a crafted tag name could inject shell metacharacters. All shell expansions of this untrusted-derived variable must be double-quoted.
+Rule (b) violation in git-tag.yml: the shell variable `${MAJOR_VERSION}` — derived from `RELEASE_TAG` which is set to `${{ github.event.release.tag_name }}` — is expanded unquoted in three shell commands: `git push origin -d ${MAJOR_VERSION} || true`, `git tag ${MAJOR_VERSION} ${GITHUB_SHA}`, and `git push origin ${MAJOR_VERSION}`. An attacker who can publish a release with a crafted tag name containing shell metacharacters (`;`, `|`, `&`, `$(...)`, etc.) could inject arbitrary shell commands into the runner. All three expansions must be double-quoted: `"${MAJOR_VERSION}"`.
 
 Locations:
 
-- `.github/workflows/git-tag.yml:30`
-- `.github/workflows/git-tag.yml:33`
+- `.github/workflows/git-tag.yml:31`
 - `.github/workflows/git-tag.yml:34`
+- `.github/workflows/git-tag.yml:35`
 
 ## Iteration Notes
 
@@ -41,6 +41,5 @@ Locations:
 
 **Notes:**
 
-1. daily.yml: Pinned both occurrences of `oke-py/npm-audit-action@v5` to the full commit SHA `41a983db466d27a887bb5e6830abc0bb925cf9e3` (resolved via lookup_action_sha), preserving `# v5` as a comment for readability. Removed the `zizmor: ignore[unpinned-uses]` suppression comments since the actions are now properly pinned.
-2. git-tag.yml: Double-quoted all three unquoted expansions of `${MAJOR_VERSION}` in the git tag step (`git push origin -d`, `git tag`, and `git push origin`) to prevent shell injection from attacker-controlled release tag names. The `RELEASE_TAG` env var already correctly maps the `github.event.release.tag_name` expression out of the shell script.
+1. daily.yml: Replaced both occurrences of `oke-py/npm-audit-action@v5` with the pinned SHA `oke-py/npm-audit-action@8809ddd828be4c0bd281826b4dc61b50b1878fda # v5`. Removed the `# zizmor: ignore[unpinned-uses]` suppression comments since the actions are now properly pinned. 2. git-tag.yml: Double-quoted all three unquoted expansions of `${MAJOR_VERSION}` (in `git push origin -d`, `git tag`, and `git push origin`) and also double-quoted `${GITHUB_SHA}` in the `git tag` command, preventing shell injection from a crafted release tag name containing metacharacters.
 

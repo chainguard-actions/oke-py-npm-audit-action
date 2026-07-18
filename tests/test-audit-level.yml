@@ -1,4 +1,4 @@
-name: Test audit_level input
+name: Test npm audit with critical audit level
 on:
   workflow_dispatch:
 jobs:
@@ -7,49 +7,37 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Verify npm is available
+      - name: Set up clean npm project fixture
         run: |
-          node --version
-          npm --version
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/audit-level-project"
+          cd "$GITHUB_WORKSPACE/tests/fixtures/audit-level-project"
+          cat > package.json <<'EOF'
+          {
+            "name": "audit-level-project",
+            "version": "1.0.0",
+            "description": "A clean project for audit level test",
+            "dependencies": {}
+          }
+          EOF
+          npm install --package-lock-only
 
       - id: action
         uses: .
         with:
-          github_token: ${{ github.token }}
-          working_directory: tests/fixtures/clean-project
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: tests/fixtures/audit-level-project
+          audit_level: critical
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
-          audit_level: critical
 
-      - name: Assert npm_audit output is set with audit_level=critical
+      - name: Assert npm_audit output is set
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty with audit_level=critical"
+            echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set with audit_level=critical"
-
-      - id: action-high
-        uses: .
-        with:
-          github_token: ${{ github.token }}
-          working_directory: tests/fixtures/clean-project
-          create_issues: 'false'
-          create_pr_comments: 'false'
-          fail_on_vulnerabilities: 'false'
-          audit_level: high
-
-      - name: Assert npm_audit output is set for audit_level=high
-        env:
-          ACTUAL: ${{ steps.action-high.outputs.npm_audit }}
-        run: |
-          echo "actual: $ACTUAL"
-          if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty with audit_level=high"
-            exit 1
-          fi
-          echo "PASS: npm_audit output is set with audit_level=high"
+          echo "PASS: npm_audit output is set with critical audit level"

@@ -1,0 +1,44 @@
+name: Test npm audit with invalid audit level (should fail)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up clean npm project fixture
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/invalid-level-project"
+          cd "$GITHUB_WORKSPACE/tests/fixtures/invalid-level-project"
+          cat > package.json <<'EOF'
+          {
+            "name": "invalid-level-project",
+            "version": "1.0.0",
+            "description": "A project for invalid audit level test",
+            "dependencies": {}
+          }
+          EOF
+          npm install --package-lock-only
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: tests/fixtures/invalid-level-project
+          audit_level: invalid-level
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+
+      - name: Assert action failed with invalid audit level
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail with invalid audit_level but got: $OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly failed with invalid audit_level"

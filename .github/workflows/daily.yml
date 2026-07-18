@@ -22,9 +22,8 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: npm ci
-      # Intentionally unpinned: dogfoods the latest released major tag of
-      # this repository's own action.
-      - uses: oke-py/npm-audit-action@41a983db466d27a887bb5e6830abc0bb925cf9e3 # v5
+      # Dogfoods the latest released major tag of this repository's own action.
+      - uses: oke-py/npm-audit-action@8809ddd828be4c0bd281826b4dc61b50b1878fda # v5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           issue_assignees: oke-py
@@ -44,9 +43,8 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: npm ci
-      # Intentionally unpinned: dogfoods the latest released major tag of
-      # this repository's own action.
-      - uses: oke-py/npm-audit-action@41a983db466d27a887bb5e6830abc0bb925cf9e3 # v5
+      # Dogfoods the latest released major tag of this repository's own action.
+      - uses: oke-py/npm-audit-action@8809ddd828be4c0bd281826b4dc61b50b1878fda # v5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           issue_assignees: oke-py

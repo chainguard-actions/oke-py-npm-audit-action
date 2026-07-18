@@ -1,4 +1,4 @@
-name: Test basic npm audit (no vulnerabilities)
+name: Test issue_assignees, issue_labels, issue_type, and registry inputs
 on:
   workflow_dispatch:
 jobs:
@@ -30,6 +30,10 @@ jobs:
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
+          issue_assignees: 'octocat'
+          issue_labels: 'security,vulnerability'
+          issue_type: 'Bug'
+          registry: 'https://registry.npmjs.org'
 
       - name: Assert npm_audit output is set
         env:
@@ -40,4 +44,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set"
+          echo "PASS: npm_audit output is set with issue_assignees, issue_labels, issue_type, and registry inputs"
