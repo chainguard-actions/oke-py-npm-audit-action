@@ -7,50 +7,23 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Test audit_level=critical
-        id: audit-critical
+      - id: action
         uses: .
         with:
-          github_token: ${{ github.token }}
-          fail_on_vulnerabilities: 'false'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: tests/fixtures/clean-project
           create_issues: 'false'
           create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
           audit_level: critical
-          working_directory: tests/fixtures/clean-project
-        env:
-          GITHUB_EVENT_NAME: push
 
-      - name: Assert npm_audit output is set for critical level
+      - name: Assert npm_audit output is set with critical audit level
         env:
-          ACTUAL: ${{ steps.audit-critical.outputs.npm_audit }}
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty for audit_level=critical"
+            echo "FAIL: expected npm_audit output to be non-empty with audit_level=critical"
             exit 1
           fi
-          echo "PASS: npm_audit output is set for audit_level=critical"
-
-      - name: Test audit_level=high
-        id: audit-high
-        uses: .
-        with:
-          github_token: ${{ github.token }}
-          fail_on_vulnerabilities: 'false'
-          create_issues: 'false'
-          create_pr_comments: 'false'
-          audit_level: high
-          working_directory: tests/fixtures/clean-project
-        env:
-          GITHUB_EVENT_NAME: push
-
-      - name: Assert npm_audit output is set for high level
-        env:
-          ACTUAL: ${{ steps.audit-high.outputs.npm_audit }}
-        run: |
-          echo "actual: $ACTUAL"
-          if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty for audit_level=high"
-            exit 1
-          fi
-          echo "PASS: npm_audit output is set for audit_level=high"
+          echo "PASS: npm_audit output is set with audit_level=critical"

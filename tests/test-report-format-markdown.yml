@@ -1,4 +1,4 @@
-name: Test report_format=markdown input
+name: Test report_format markdown
 on:
   workflow_dispatch:
 jobs:
@@ -7,25 +7,24 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - id: audit
+      - id: action
         uses: .
         with:
-          github_token: ${{ github.token }}
-          fail_on_vulnerabilities: 'false'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: tests/fixtures/clean-project
           create_issues: 'false'
           create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+          audit_level: low
           report_format: markdown
-          working_directory: tests/fixtures/clean-project
-        env:
-          GITHUB_EVENT_NAME: push
 
-      - name: Assert npm_audit output is set with markdown report_format
+      - name: Assert npm_audit output is set with markdown report format
         env:
-          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty when report_format=markdown"
+            echo "FAIL: expected npm_audit output to be non-empty with report_format=markdown"
             exit 1
           fi
           echo "PASS: npm_audit output is set with report_format=markdown"

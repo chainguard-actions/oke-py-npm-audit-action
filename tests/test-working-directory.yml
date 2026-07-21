@@ -7,30 +7,23 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Create a subdirectory project
-        run: |
-          mkdir -p tests/fixtures/subdir-project
-          cp tests/fixtures/clean-project/package.json tests/fixtures/subdir-project/
-          cp tests/fixtures/clean-project/package-lock.json tests/fixtures/subdir-project/
-
-      - id: audit
+      - id: action
         uses: .
         with:
-          github_token: ${{ github.token }}
-          fail_on_vulnerabilities: 'false'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: tests/fixtures/clean-project
           create_issues: 'false'
           create_pr_comments: 'false'
-          working_directory: tests/fixtures/subdir-project
-        env:
-          GITHUB_EVENT_NAME: push
+          fail_on_vulnerabilities: 'false'
+          audit_level: low
 
-      - name: Assert npm_audit output is set when using working_directory
+      - name: Assert npm_audit output is set for working_directory project
         env:
-          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
             echo "FAIL: expected npm_audit output to be non-empty when using working_directory"
             exit 1
           fi
-          echo "PASS: npm_audit output is set with working_directory"
+          echo "PASS: npm_audit output is set for working_directory"

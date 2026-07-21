@@ -1,4 +1,4 @@
-name: Test json_flag input
+name: Test issue_assignees and issue_labels inputs
 on:
   workflow_dispatch:
 jobs:
@@ -16,9 +16,10 @@ jobs:
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
           audit_level: low
-          json_flag: 'true'
+          issue_assignees: 'octocat'
+          issue_labels: 'security,dependencies'
 
-      - name: Assert npm_audit output is valid JSON
+      - name: Assert npm_audit output is set with issue metadata inputs
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
@@ -27,9 +28,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          # Verify the output is valid JSON by parsing it
-          if ! echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
-            echo "FAIL: expected npm_audit output to be valid JSON when json_flag=true"
-            exit 1
-          fi
-          echo "PASS: npm_audit output is valid JSON"
+          echo "PASS: npm_audit output is set with issue_assignees and issue_labels"

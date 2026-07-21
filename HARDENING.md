@@ -8,7 +8,7 @@
 
 **Test Policy SHA:** `843adf9e4b8f85d0c08b27b9d0b09dd094b54702`
 
-**Harden Agent Version:** `1`
+**Harden Agent Version:** `2`
 
 Action **oke-py--npm-audit-action/v5.3.0** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
@@ -16,7 +16,7 @@ Action **oke-py--npm-audit-action/v5.3.0** was hardened automatically. 2 finding
 
 ### unpinned-uses (severity: high)
 
-The workflow uses 'oke-py/npm-audit-action@v5' (a mutable tag reference, not a full 40-character commit SHA) in two steps. A supply-chain attacker who gains write access to that repository could push a malicious version under the same tag without any change to this workflow file. The comment 'intentionally unpinned' does not mitigate the risk. Failing references: line 26 (scan job) and line 44 (scan-on-windows job).
+The workflow uses `oke-py/npm-audit-action@v5` (a mutable tag reference, not a full 40-character SHA commit pin) in two steps. A tag can be moved to point to a different, potentially malicious commit at any time, enabling a supply-chain attack. The `# zizmor: ignore[unpinned-uses]` comment suppresses the zizmor tool's warning but does not mitigate the underlying risk. Both occurrences should be replaced with a pinned SHA.
 
 Locations:
 
@@ -25,13 +25,13 @@ Locations:
 
 ### script-injection (severity: high)
 
-Sub-rule (b): The 'git tag' run block expands ${MAJOR_VERSION} unquoted in three shell commands. MAJOR_VERSION is computed from RELEASE_TAG, which is set to ${{ github.event.release.tag_name }} in the env: block. A release tag name containing shell metacharacters (e.g. spaces, semicolons, backticks) would be split or interpreted by the shell before git sees it. Offending lines: 'git push origin -d ${MAJOR_VERSION} || true' (line 31), 'git tag ${MAJOR_VERSION} ${GITHUB_SHA}' (line 34), 'git push origin ${MAJOR_VERSION}' (line 35). Fix: quote all expansions as "${MAJOR_VERSION}".
+Rule (b) violation: In the 'git tag' run block, the shell variable `${MAJOR_VERSION}` — derived from `RELEASE_TAG` which is set from `${{ github.event.release.tag_name }}` (a workflow-controllable value) — is expanded without double-quoting in three git commands: `git push origin -d ${MAJOR_VERSION}` (line 30), `git tag ${MAJOR_VERSION} ${GITHUB_SHA}` (line 33), and `git push origin ${MAJOR_VERSION}` (line 34). An attacker who can create a release with a crafted tag name containing shell metacharacters (`;`, `|`, `&`, etc.) could inject arbitrary shell commands. All three expansions must be quoted: `"${MAJOR_VERSION}"`.
 
 Locations:
 
-- `.github/workflows/git-tag.yml:31`
+- `.github/workflows/git-tag.yml:30`
+- `.github/workflows/git-tag.yml:33`
 - `.github/workflows/git-tag.yml:34`
-- `.github/workflows/git-tag.yml:35`
 
 ## Iteration Notes
 
@@ -41,5 +41,5 @@ Locations:
 
 **Notes:**
 
-1. daily.yml: Pinned both occurrences of `oke-py/npm-audit-action@v5` to full commit SHA `96715dda926adae1af5001117edfd47b2a68ed02 # v5` (lines 26 and 44). Removed the 'intentionally unpinned' comments and zizmor ignore annotations since the action is now properly pinned. 2. git-tag.yml: Quoted all three unquoted `${MAJOR_VERSION}` shell expansions (git push origin -d, git tag, git push origin) with double quotes to prevent shell metacharacter injection from attacker-controlled release tag names. Also quoted `${GITHUB_SHA}` in the git tag command for consistency.
+1. daily.yml: Replaced both `oke-py/npm-audit-action@v5` (mutable tag) references with the pinned SHA `oke-py/npm-audit-action@8809ddd828be4c0bd281826b4dc61b50b1878fda # v5`. The `# zizmor: ignore[unpinned-uses]` suppression comments were removed since the references are now properly pinned. 2. git-tag.yml: Double-quoted all three unquoted `${MAJOR_VERSION}` expansions (`git push origin -d`, `git tag`, and `git push origin`) to prevent shell injection from a crafted release tag name. Also double-quoted `${GITHUB_SHA}` in the `git tag` command for consistency.
 
