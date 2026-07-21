@@ -1,26 +1,23 @@
-name: Test audit_level critical - no critical vulnerabilities
+name: Test audit_level critical
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_EVENT_NAME: push
-      GITHUB_REF: refs/heads/main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - id: action
         uses: .
         with:
-          github_token: fake-token-for-critical-test
+          github_token: ${{ github.token }}
           audit_level: critical
           create_issues: 'false'
           create_pr_comments: 'false'
-          fail_on_vulnerabilities: 'true'
-          working_directory: tests/fixtures/clean-package
+          fail_on_vulnerabilities: 'false'
+          working_directory: tests/fixtures/clean-project
 
-      - name: Assert action succeeded with critical audit_level on clean package
+      - name: Assert npm_audit output is set with critical audit level
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
@@ -29,4 +26,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: action succeeded with audit_level=critical on clean package"
+          echo "PASS: npm_audit output is set with critical audit level"

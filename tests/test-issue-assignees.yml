@@ -1,4 +1,4 @@
-name: Test json_flag input
+name: Test issue_assignees input
 on:
   workflow_dispatch:
 jobs:
@@ -12,24 +12,19 @@ jobs:
         with:
           github_token: ${{ github.token }}
           audit_level: low
-          json_flag: 'true'
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
-          working_directory: tests/fixtures/clean-project
+          issue_assignees: 'octocat'
+          working_directory: tests/fixtures/clean-package
 
-      - name: Assert npm_audit output is valid JSON
+      - name: Assert npm_audit output is set when using issue_assignees
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty"
+            echo "FAIL: expected npm_audit output to be non-empty when using issue_assignees"
             exit 1
           fi
-          # Verify the output is valid JSON by parsing it
-          if ! echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
-            echo "FAIL: expected npm_audit output to be valid JSON"
-            exit 1
-          fi
-          echo "PASS: npm_audit output is valid JSON"
+          echo "PASS: action completed with issue_assignees input"

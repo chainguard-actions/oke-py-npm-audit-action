@@ -21,8 +21,6 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: npm ci
-      # Intentionally unpinned: dogfoods the latest released major tag of
-      # this repository's own action.
       - uses: oke-py/npm-audit-action@828ccb3b0710dfb351b6e9aaadec963c6953cacf # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,25 +1,22 @@
-name: Test production_flag option
+name: Test production_flag input
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_EVENT_NAME: push
-      GITHUB_REF: refs/heads/main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - id: action
         uses: .
         with:
-          github_token: fake-token-for-prod-test
+          github_token: ${{ github.token }}
           audit_level: low
+          production_flag: 'true'
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
-          production_flag: 'true'
-          working_directory: tests/fixtures/clean-package
+          working_directory: tests/fixtures/clean-project
 
       - name: Assert npm_audit output is set when using production_flag
         env:

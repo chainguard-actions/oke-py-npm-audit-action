@@ -1,4 +1,4 @@
-name: Test json_flag input
+name: Test working_directory input
 on:
   workflow_dispatch:
 jobs:
@@ -12,24 +12,18 @@ jobs:
         with:
           github_token: ${{ github.token }}
           audit_level: low
-          json_flag: 'true'
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
           working_directory: tests/fixtures/clean-project
 
-      - name: Assert npm_audit output is valid JSON
+      - name: Assert npm_audit output is set when using working_directory
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty"
+            echo "FAIL: expected npm_audit output to be non-empty when using working_directory"
             exit 1
           fi
-          # Verify the output is valid JSON by parsing it
-          if ! echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
-            echo "FAIL: expected npm_audit output to be valid JSON"
-            exit 1
-          fi
-          echo "PASS: npm_audit output is valid JSON"
+          echo "PASS: npm_audit output is set when using working_directory"

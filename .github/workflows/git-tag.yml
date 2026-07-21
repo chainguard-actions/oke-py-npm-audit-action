@@ -22,7 +22,7 @@ jobs:
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
       - name: git tag
         run: |
-          git remote set-url origin https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
+          git remote set-url origin "https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
           # Extract major version from release tag (e.g., v4.0.0 -> v4)
           MAJOR_VERSION=$(echo "${RELEASE_TAG}" | grep -o "^v[0-9]*")
           echo "Tagging with major version: ${MAJOR_VERSION}"
