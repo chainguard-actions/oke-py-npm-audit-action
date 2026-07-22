@@ -1,4 +1,4 @@
-name: Test json flag output
+name: Test basic clean audit
 on:
   workflow_dispatch:
 jobs:
@@ -9,9 +9,9 @@ jobs:
 
       - name: Set up clean npm project in workspace subdirectory
         run: |
-          mkdir -p json-project
-          cp tests/fixtures/clean-project/package.json json-project/
-          cp tests/fixtures/clean-project/package-lock.json json-project/
+          mkdir -p clean-project
+          cp tests/fixtures/clean-project/package.json clean-project/
+          cp tests/fixtures/clean-project/package-lock.json clean-project/
 
       - id: action
         uses: .
@@ -21,10 +21,9 @@ jobs:
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'true'
-          json_flag: 'true'
-          working_directory: json-project
+          working_directory: clean-project
 
-      - name: Assert npm_audit output is valid JSON
+      - name: Assert npm_audit output is set
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
@@ -33,9 +32,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          # Verify the output is valid JSON
-          if ! echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
-            echo "FAIL: expected npm_audit output to be valid JSON"
-            exit 1
-          fi
-          echo "PASS: npm_audit output is valid JSON"
+          echo "PASS: npm_audit output is set"

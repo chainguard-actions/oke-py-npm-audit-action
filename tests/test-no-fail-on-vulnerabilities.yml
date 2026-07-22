@@ -1,4 +1,4 @@
-name: Test fail_on_vulnerabilities disabled
+name: Test fail_on_vulnerabilities false
 on:
   workflow_dispatch:
 jobs:
@@ -7,18 +7,21 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Set up clean npm project in workspace subdirectory
+        run: |
+          mkdir -p nofail-project
+          cp tests/fixtures/clean-project/package.json nofail-project/
+          cp tests/fixtures/clean-project/package-lock.json nofail-project/
+
       - id: action
         uses: .
         with:
-          audit_level: critical
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          audit_level: low
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'false'
-          github_token: ${{ github.token }}
-          working_directory: tests/fixtures/clean-project
-        env:
-          GITHUB_EVENT_NAME: push
-          GITHUB_REF: refs/heads/main
+          working_directory: nofail-project
 
       - name: Assert action succeeded and npm_audit output is set
         env:
@@ -29,4 +32,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: action completed without failure and npm_audit output is set"
+          echo "PASS: action succeeded with fail_on_vulnerabilities=false"

@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: npm ci
-      - uses: oke-py/npm-audit-action@9401043799369ac417d1485c108bf5d327982b73 # v5
+      - uses: oke-py/npm-audit-action@8809ddd828be4c0bd281826b4dc61b50b1878fda # v5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           issue_assignees: oke-py
@@ -42,7 +42,7 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: npm ci
-      - uses: oke-py/npm-audit-action@9401043799369ac417d1485c108bf5d327982b73 # v5
+      - uses: oke-py/npm-audit-action@8809ddd828be4c0bd281826b4dc61b50b1878fda # v5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           issue_assignees: oke-py
