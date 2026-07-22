@@ -1,53 +1,50 @@
-name: Test json_flag input
+name: Test json_flag - npm audit with --json output
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_EVENT_NAME: push
-      GITHUB_REF: refs/heads/main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up event payload
+      - name: Create a clean npm project with no vulnerabilities
         run: |
-          mkdir -p /tmp/events
-          cp "$GITHUB_WORKSPACE/tests/fixtures/events/push.json" /tmp/events/push.json
-          echo "GITHUB_EVENT_PATH=/tmp/events/push.json" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/json-project"
+          cat > "$GITHUB_WORKSPACE/json-project/package.json" <<'EOF'
+          {
+            "name": "json-project",
+            "version": "1.0.0",
+            "description": "A clean project for JSON output test",
+            "dependencies": {}
+          }
+          EOF
+          cd "$GITHUB_WORKSPACE/json-project"
+          npm install --package-lock-only
 
-      - name: Copy clean npm project to workspace
-        run: |
-          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package.json" "$GITHUB_WORKSPACE/package.json"
-          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package-lock.json" "$GITHUB_WORKSPACE/package-lock.json"
-
-      - id: audit
+      - id: action
         uses: .
         with:
-          github_token: fake-token-for-testing
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           audit_level: low
           create_issues: 'false'
           create_pr_comments: 'false'
-          fail_on_vulnerabilities: 'true'
+          fail_on_vulnerabilities: 'false'
           json_flag: 'true'
+          working_directory: json-project
 
       - name: Assert npm_audit output is valid JSON
         env:
-          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          # The output is wrapped in backtick code blocks by the action
-          # Extract the JSON content between the backtick fences
-          JSON_CONTENT=$(echo "$ACTUAL" | sed 's/^```//;s/```$//' | tr -d '\n' | xargs)
-          echo "json content: $JSON_CONTENT"
-          # Verify the raw output contains JSON-like content (curly braces)
-          if echo "$ACTUAL" | grep -q '{'; then
-            echo "PASS: output contains JSON content"
+          # Verify the output is valid JSON by parsing it
+          if echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
+            echo "PASS: npm_audit output is valid JSON"
           else
-            echo "FAIL: output does not appear to contain JSON"
+            echo "FAIL: npm_audit output is not valid JSON"
             exit 1
           fi

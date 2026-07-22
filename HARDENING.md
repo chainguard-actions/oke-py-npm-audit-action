@@ -8,7 +8,7 @@
 
 **Test Policy SHA:** `843adf9e4b8f85d0c08b27b9d0b09dd094b54702`
 
-**Harden Agent Version:** `1`
+**Harden Agent Version:** `2`
 
 Action **oke-py--npm-audit-action/v5.2.0** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
@@ -16,23 +16,23 @@ Action **oke-py--npm-audit-action/v5.2.0** was hardened automatically. 2 finding
 
 ### unpinned-uses (severity: high)
 
-daily.yml uses 'oke-py/npm-audit-action@v5' (a mutable tag, not a full 40-character SHA) in two steps. This means the action could be silently replaced with a malicious version without any change to the workflow file. Both occurrences are in the scan and scan-on-windows jobs.
+The workflow uses `oke-py/npm-audit-action@v5` — a mutable tag reference rather than a pinned 40-character commit SHA. This means the action could be silently replaced with a different (potentially malicious) version without any change to the workflow file. This appears twice (in the `scan` and `scan-on-windows` jobs). The comment `# zizmor: ignore[unpinned-uses]` suppresses the zizmor tool's warning but does not eliminate the actual supply-chain risk.
 
 Locations:
 
 - `.github/workflows/daily.yml:26`
-- `.github/workflows/daily.yml:43`
+- `.github/workflows/daily.yml:41`
 
 ### script-injection (severity: high)
 
-git-tag.yml 'git tag' run block (sub-rule b): the env var MAJOR_VERSION is derived from RELEASE_TAG (${{ github.event.release.tag_name }}) and is used unquoted in three shell commands: 'git push origin -d ${MAJOR_VERSION} || true' (line 31), 'git tag ${MAJOR_VERSION} ${GITHUB_SHA}' (line 34), and 'git push origin ${MAJOR_VERSION}' (line 35). An attacker who can control the release tag name could inject shell metacharacters. Additionally, ${GITHUB_REPOSITORY} is used unquoted in the remote URL on line 25.
+Rule (b) violation: In the `git tag` step, the env var `RELEASE_TAG` is set from `${{ github.event.release.tag_name }}` (a workflow-controlled value). It is used to compute `MAJOR_VERSION=$(echo "${RELEASE_TAG}" | grep -o "^v[0-9]*")`, and then `${MAJOR_VERSION}` is expanded **unquoted** in multiple shell commands: `git push origin -d ${MAJOR_VERSION} || true` (line 30), `git tag ${MAJOR_VERSION} ${GITHUB_SHA}` (line 33), and `git push origin ${MAJOR_VERSION}` (line 34). An attacker who can create a release with a crafted tag name could inject shell metacharacters. Additionally, `${GITHUB_REPOSITORY}` is unquoted in the remote URL on line 25: `https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}`. All of these should be double-quoted: `"${MAJOR_VERSION}"`, `"${GITHUB_REPOSITORY}"`, etc.
 
 Locations:
 
 - `.github/workflows/git-tag.yml:25`
-- `.github/workflows/git-tag.yml:31`
+- `.github/workflows/git-tag.yml:30`
+- `.github/workflows/git-tag.yml:33`
 - `.github/workflows/git-tag.yml:34`
-- `.github/workflows/git-tag.yml:35`
 
 ## Iteration Notes
 
@@ -42,6 +42,5 @@ Locations:
 
 **Notes:**
 
-1. daily.yml: Replaced both `oke-py/npm-audit-action@v5` references (lines 26 and 43) with the pinned SHA `oke-py/npm-audit-action@96715dda926adae1af5001117edfd47b2a68ed02 # v5`. Removed the intentional-unpinning comments that were suppressing the finding.
-2. git-tag.yml: Fixed script injection by double-quoting all unquoted variable expansions in the 'git tag' run block: `${GITHUB_REPOSITORY}` in the remote URL (line 25), and `${MAJOR_VERSION}` in the three git commands on lines 31, 34, and 35. The `RELEASE_TAG` (from `github.event.release.tag_name`) was already safely passed via the env block.
+1. daily.yml: Pinned both occurrences of `oke-py/npm-audit-action@v5` to full SHA `8809ddd828be4c0bd281826b4dc61b50b1878fda # v5`. Removed the misleading 'intentionally unpinned' comments and zizmor suppression annotations. 2. git-tag.yml: Double-quoted all unquoted shell variable expansions in the 'git tag' step: `${GITHUB_REPOSITORY}` in the remote URL (line 25), and `${MAJOR_VERSION}` in `git push origin -d` (line 30), `git tag` (line 33), and `git push origin` (line 34). This prevents shell injection from attacker-controlled release tag names.
 

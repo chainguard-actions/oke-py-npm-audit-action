@@ -1,43 +1,45 @@
-name: Test production_flag input
+name: Test production_flag - npm audit with --omit=dev
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_EVENT_NAME: push
-      GITHUB_REF: refs/heads/main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up event payload
+      - name: Create a clean npm project with only devDependencies
         run: |
-          mkdir -p /tmp/events
-          cp "$GITHUB_WORKSPACE/tests/fixtures/events/push.json" /tmp/events/push.json
-          echo "GITHUB_EVENT_PATH=/tmp/events/push.json" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/prod-project"
+          cat > "$GITHUB_WORKSPACE/prod-project/package.json" <<'EOF'
+          {
+            "name": "prod-project",
+            "version": "1.0.0",
+            "description": "A project with only devDependencies",
+            "dependencies": {},
+            "devDependencies": {}
+          }
+          EOF
+          cd "$GITHUB_WORKSPACE/prod-project"
+          npm install --package-lock-only
 
-      - name: Copy clean npm project to workspace
-        run: |
-          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package.json" "$GITHUB_WORKSPACE/package.json"
-          cp "$GITHUB_WORKSPACE/tests/fixtures/clean-project/package-lock.json" "$GITHUB_WORKSPACE/package-lock.json"
-
-      - id: audit
+      - id: action
         uses: .
         with:
-          github_token: fake-token-for-testing
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           audit_level: low
           create_issues: 'false'
           create_pr_comments: 'false'
-          fail_on_vulnerabilities: 'true'
+          fail_on_vulnerabilities: 'false'
           production_flag: 'true'
+          working_directory: prod-project
 
-      - name: Assert npm_audit output is set with production_flag
+      - name: Assert npm_audit output is set
         env:
-          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty with production_flag=true"
+            echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set with production_flag=true"
+          echo "PASS: npm_audit output is set with production_flag"

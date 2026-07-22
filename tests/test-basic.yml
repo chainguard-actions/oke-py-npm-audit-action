@@ -1,4 +1,4 @@
-name: Test audit_level - critical level on clean project
+name: Test basic usage - no vulnerabilities
 on:
   workflow_dispatch:
 jobs:
@@ -9,27 +9,27 @@ jobs:
 
       - name: Create a clean npm project with no vulnerabilities
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/audit-level-project"
-          cat > "$GITHUB_WORKSPACE/audit-level-project/package.json" <<'EOF'
+          mkdir -p "$GITHUB_WORKSPACE/clean-project"
+          cat > "$GITHUB_WORKSPACE/clean-project/package.json" <<'EOF'
           {
-            "name": "audit-level-project",
+            "name": "clean-project",
             "version": "1.0.0",
-            "description": "A clean project for audit level test",
+            "description": "A clean project with no dependencies",
             "dependencies": {}
           }
           EOF
-          cd "$GITHUB_WORKSPACE/audit-level-project"
+          cd "$GITHUB_WORKSPACE/clean-project"
           npm install --package-lock-only
 
       - id: action
         uses: .
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          audit_level: critical
+          audit_level: low
           create_issues: 'false'
           create_pr_comments: 'false'
-          fail_on_vulnerabilities: 'true'
-          working_directory: audit-level-project
+          fail_on_vulnerabilities: 'false'
+          working_directory: clean-project
 
       - name: Assert npm_audit output is set
         env:
@@ -40,4 +40,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set with critical audit_level"
+          echo "PASS: npm_audit output is set"
