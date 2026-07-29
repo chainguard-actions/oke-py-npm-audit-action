@@ -1,0 +1,65 @@
+name: daily scan
+
+on:
+  schedule:
+    - cron: '0 20 * * *'
+
+permissions: {}
+
+jobs:
+  scan:
+    name: npm audit
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      # Serialized so that concurrent jobs cannot race past the dedupe_issues
+      # check and file duplicate issues
+      max-parallel: 1
+      matrix:
+        os: [ubuntu-slim, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      # Intentionally unpinned: dogfoods the latest released major tag of
+      # this repository's own action.
+      - uses: oke-py/npm-audit-action@4fa25b0230596f76d96b7e50b66b1e3a0d185d9f # v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability
+          dedupe_issues: true
+          dedupe_comments: true
+          production_flag: true
+          report_format: markdown
+
+  scan-on-windows:
+    name: npm audit (windows)
+    # Runs after the serialized scan job so that all three runs check the
+    # existing issue sequentially instead of racing to create it
+    needs: scan
+    permissions:
+      contents: read
+      issues: write
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: npm ci
+      # Intentionally unpinned: dogfoods the latest released major tag of
+      # this repository's own action.
+      - uses: oke-py/npm-audit-action@4fa25b0230596f76d96b7e50b66b1e3a0d185d9f # v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability
+          dedupe_issues: true
+          dedupe_comments: true
+          production_flag: true
+          report_format: markdown
