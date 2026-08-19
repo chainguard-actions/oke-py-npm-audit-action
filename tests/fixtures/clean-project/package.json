@@ -1,6 +1,6 @@
 {
-  "name": "test-project",
+  "name": "clean-test-project",
   "version": "1.0.0",
-  "description": "Test project for npm audit action",
+  "description": "A test project with no vulnerabilities",
   "dependencies": {}
 }

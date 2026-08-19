@@ -1,4 +1,4 @@
-name: Test basic npm audit - no vulnerabilities
+name: Test npm audit with production flag
 on:
   workflow_dispatch:
 jobs:
@@ -11,11 +11,12 @@ jobs:
         uses: .
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          working_directory: tests/fixtures/clean-project
+          working_directory: tests/fixtures/prod-project
           audit_level: low
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'true'
+          production_flag: 'true'
 
       - name: Assert npm_audit output is set
         env:
@@ -26,8 +27,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set"
-
-      - name: Assert no vulnerabilities found (audit passed)
-        run: |
-          echo "PASS: action completed without failure (no vulnerabilities)"
+          echo "PASS: npm_audit output is set with production flag"

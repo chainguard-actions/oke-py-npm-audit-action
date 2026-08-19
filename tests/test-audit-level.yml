@@ -1,4 +1,4 @@
-name: Test basic npm audit - no vulnerabilities
+name: Test npm audit with critical audit level
 on:
   workflow_dispatch:
 jobs:
@@ -12,7 +12,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: tests/fixtures/clean-project
-          audit_level: low
+          audit_level: critical
           create_issues: 'false'
           create_pr_comments: 'false'
           fail_on_vulnerabilities: 'true'
@@ -26,8 +26,4 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set"
-
-      - name: Assert no vulnerabilities found (audit passed)
-        run: |
-          echo "PASS: action completed without failure (no vulnerabilities)"
+          echo "PASS: npm_audit output is set with critical audit level"

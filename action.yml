@@ -54,9 +54,9 @@ outputs:
   npm_audit:
     description: 'The output of the npm audit report in a text format'
 runs:
+  pre: chainguard-phonehome.js
   using: 'node24'
   main: 'dist/index.js'
-  pre: chainguard-phonehome.js
 branding:
   icon: 'search'
   color: 'orange'

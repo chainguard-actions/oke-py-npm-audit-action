@@ -1,0 +1,7 @@
+{
+  "name": "prod-test-project",
+  "version": "1.0.0",
+  "description": "A test project for production flag",
+  "dependencies": {},
+  "devDependencies": {}
+}
