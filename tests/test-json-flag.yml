@@ -1,4 +1,4 @@
-name: Test basic usage - no vulnerabilities
+name: Test json_flag option
 on:
   workflow_dispatch:
 jobs:
@@ -15,8 +15,9 @@ jobs:
           fail_on_vulnerabilities: 'false'
           create_issues: 'false'
           create_pr_comments: 'false'
+          json_flag: 'true'
 
-      - name: Assert npm_audit output is set
+      - name: Assert npm_audit output is valid JSON
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |
@@ -25,17 +26,11 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set"
-
-      - name: Assert output contains audit info
-        env:
-          ACTUAL: ${{ steps.action.outputs.npm_audit }}
-        run: |
-          echo "actual: $ACTUAL"
-          # npm audit output should contain "found" or "audited" or similar text
-          if echo "$ACTUAL" | grep -qiE 'found|audit|vulnerabilit|package'; then
-            echo "PASS: output contains expected audit-related text"
+          # When json_flag is true, output should be parseable JSON
+          if echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
+            echo "PASS: output is valid JSON"
           else
-            echo "FAIL: output does not contain expected audit-related text"
+            echo "FAIL: output is not valid JSON"
+            echo "Output was: $ACTUAL"
             exit 1
           fi

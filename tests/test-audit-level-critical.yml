@@ -1,0 +1,33 @@
+name: Test npm audit with critical audit level
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: push
+      GITHUB_REF: refs/heads/main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: audit
+        uses: .
+        with:
+          audit_level: critical
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'false'
+          github_token: dummy-token-for-testing
+          github_context: '{"event_name":"push","event":{},"repository":{"name":"test","owner":{"login":"test"}}}'
+          working_directory: tests/fixtures/clean-project
+
+      - name: Assert npm_audit output is set
+        env:
+          ACTUAL: ${{ steps.audit.outputs.npm_audit }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set with critical audit level"
