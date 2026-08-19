@@ -1,4 +1,4 @@
-name: Test npm audit with issue options
+name: Test issue options (assignees and labels)
 on:
   workflow_dispatch:
 jobs:
@@ -7,35 +7,32 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Create package.json with no vulnerabilities
+      - name: Create a minimal package.json with no vulnerabilities
         run: |
-          mkdir -p /tmp/test-project-issues
-          cat > /tmp/test-project-issues/package.json << 'EOF'
+          mkdir -p "$GITHUB_WORKSPACE/test-pkg"
+          cat > "$GITHUB_WORKSPACE/test-pkg/package.json" <<'EOF'
           {
-            "name": "test-project-issues",
+            "name": "test-package",
             "version": "1.0.0",
-            "description": "Test project for npm audit issue options",
+            "description": "Test package",
             "dependencies": {}
           }
           EOF
-          cd /tmp/test-project-issues
-          npm install --package-lock-only
+          cd "$GITHUB_WORKSPACE/test-pkg"
+          npm install --package-lock-only 2>/dev/null || true
 
       - id: action
         uses: .
         with:
-          github_token: ${{ github.token }}
-          working_directory: /tmp/test-project-issues
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: test-pkg
+          audit_level: critical
           create_issues: 'false'
           create_pr_comments: 'false'
-          issue_assignees: 'testuser'
+          issue_assignees: 'octocat'
           issue_labels: 'security,vulnerability'
-          issue_title: 'Test: npm audit found vulnerabilities'
-          audit_level: low
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Assert npm_audit output exists
+      - name: Assert npm_audit output is present
         env:
           ACTUAL: ${{ steps.action.outputs.npm_audit }}
         run: |

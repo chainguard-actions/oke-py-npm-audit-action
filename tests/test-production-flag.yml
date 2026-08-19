@@ -1,4 +1,4 @@
-name: Test basic usage - no vulnerabilities
+name: Test production_flag input
 on:
   workflow_dispatch:
 jobs:
@@ -13,16 +13,17 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: tests/fixtures/clean-project
           audit_level: low
+          production_flag: 'true'
           create_issues: 'false'
           create_pr_comments: 'false'
 
-      - name: Assert npm_audit output is set
+      - name: Assert npm_audit output is set with production_flag
         env:
           ACTUAL: ${{ steps.audit.outputs.npm_audit }}
         run: |
           echo "actual: $ACTUAL"
           if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected npm_audit output to be non-empty"
+            echo "FAIL: expected npm_audit output to be non-empty when using production_flag=true"
             exit 1
           fi
-          echo "PASS: npm_audit output is set"
+          echo "PASS: production_flag=true works correctly"

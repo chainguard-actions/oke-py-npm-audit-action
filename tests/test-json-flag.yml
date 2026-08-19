@@ -1,4 +1,4 @@
-name: Test basic usage - no vulnerabilities
+name: Test json_flag input
 on:
   workflow_dispatch:
 jobs:
@@ -13,10 +13,11 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: tests/fixtures/clean-project
           audit_level: low
+          json_flag: 'true'
           create_issues: 'false'
           create_pr_comments: 'false'
 
-      - name: Assert npm_audit output is set
+      - name: Assert npm_audit output is valid JSON
         env:
           ACTUAL: ${{ steps.audit.outputs.npm_audit }}
         run: |
@@ -25,4 +26,9 @@ jobs:
             echo "FAIL: expected npm_audit output to be non-empty"
             exit 1
           fi
-          echo "PASS: npm_audit output is set"
+          # Verify the output is valid JSON
+          if ! echo "$ACTUAL" | python3 -c "import sys, json; json.load(sys.stdin)" 2>/dev/null; then
+            echo "FAIL: expected npm_audit output to be valid JSON when json_flag=true"
+            exit 1
+          fi
+          echo "PASS: json_flag=true produces valid JSON output"
