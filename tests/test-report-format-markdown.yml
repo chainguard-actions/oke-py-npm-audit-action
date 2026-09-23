@@ -1,0 +1,36 @@
+name: Test report_format markdown
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          audit_level: low
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'true'
+          report_format: markdown
+          working_directory: tests/fixtures/clean-project
+
+      - name: Assert action succeeded with markdown report format
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          NPM_AUDIT: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "npm_audit: $NPM_AUDIT"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected action to succeed but got: $OUTCOME"
+            exit 1
+          fi
+          if [ -z "$NPM_AUDIT" ]; then
+            echo "FAIL: npm_audit output is empty"
+            exit 1
+          fi
+          echo "PASS: action succeeded with report_format=markdown"

@@ -1,0 +1,29 @@
+name: Test no vulnerabilities
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          audit_level: low
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'true'
+          working_directory: tests/fixtures/clean-project
+
+      - name: Assert npm_audit output is set
+        env:
+          NPM_AUDIT: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "npm_audit output: $NPM_AUDIT"
+          if [ -z "$NPM_AUDIT" ]; then
+            echo "FAIL: npm_audit output is empty"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set"
