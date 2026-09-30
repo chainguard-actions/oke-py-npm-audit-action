@@ -1,0 +1,40 @@
+name: Test audit_level input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ github.token }}
+          audit_level: critical
+          create_issues: 'false'
+          create_pr_comments: 'false'
+          fail_on_vulnerabilities: 'true'
+          working_directory: tests/fixtures/audit-level-project
+
+      - name: Assert action succeeded with critical audit level
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected action to succeed with critical audit level on clean project"
+            exit 1
+          fi
+          echo "PASS: action succeeded with critical audit level"
+
+      - name: Assert npm_audit output is set
+        env:
+          AUDIT_OUTPUT: ${{ steps.action.outputs.npm_audit }}
+        run: |
+          echo "npm_audit output: $AUDIT_OUTPUT"
+          if [ -z "$AUDIT_OUTPUT" ]; then
+            echo "FAIL: expected npm_audit output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: npm_audit output is set"

@@ -1,0 +1,6 @@
+{
+  "name": "clean-project",
+  "version": "1.0.0",
+  "description": "A project with no known vulnerabilities",
+  "dependencies": {}
+}

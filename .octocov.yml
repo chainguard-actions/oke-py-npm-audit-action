@@ -1,0 +1,38 @@
+coverage:
+  paths:
+    - coverage/lcov.info
+  # Fixed threshold: fail the build when coverage drops below 90%.
+  # Deliberately not diff-based; small fluctuations must not fail CI.
+  acceptable: 90%
+  badge:
+    path: docs/coverage.svg
+# Informational only (no acceptable threshold): lines of test code per
+# line of product code
+codeToTestRatio:
+  code:
+    - src/**/*.ts
+  test:
+    - __tests__/**/*.ts
+    - __fixtures__/**/*.ts
+    # the workdir fixture contains a committed node_modules
+    - '!__tests__/testdata/**'
+  badge:
+    path: docs/ratio.svg
+testExecutionTime:
+  badge:
+    path: docs/time.svg
+comment:
+  if: is_pull_request
+  updatePrevious: true
+summary:
+  if: true
+report:
+  if: is_default_branch
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+diff:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+push:
+  if: is_default_branch
+  message: 'chore: update coverage badge by octocov [skip ci]'
