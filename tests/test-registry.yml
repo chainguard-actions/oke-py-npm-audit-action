@@ -1,0 +1,33 @@
+name: Test custom registry
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_UPDATE_NOTIFIER: "false"
+      NPM_CONFIG_FUND: "false"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: tests/fixtures/clean
+          registry: https://registry.npmjs.org
+      - name: Assert step succeeded and output reports 0 vulnerabilities
+        env:
+          ACTUAL: ${{ steps.action.outputs.npm_audit }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "actual: $ACTUAL"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected success"
+            exit 1
+          fi
+          if ! echo "$ACTUAL" | grep -qi "found 0 vulnerabilities"; then
+            echo "FAIL: expected 'found 0 vulnerabilities' in output"
+            exit 1
+          fi
+          echo "PASS"
